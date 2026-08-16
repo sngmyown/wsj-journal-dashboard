@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WSJ Investment Journal</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c0d10;
+      --panel: #14161b;
+      --panel-2: #1a1d23;
+      --text: #f4f5f7;
+      --muted: #9da3ae;
+      --line: #2a2f38;
+      --accent: #d8ff5f;
+      --positive: #63d297;
+      --negative: #ff7f7f;
+      --neutral: #aab2c0;
+      --warning: #ffca67;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+
+    .shell { max-width: 1440px; margin: 0 auto; padding: 28px; }
+    .topbar {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 18px;
+      margin-bottom: 24px;
+    }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 6px 0 6px; font-size: clamp(28px, 4vw, 44px); line-height: 1.02; letter-spacing: -.04em; }
+    .sub { color: var(--muted); max-width: 760px; line-height: 1.55; }
+    .wsj-links { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .link-btn, .btn {
+      border: 1px solid var(--line); background: var(--panel); color: var(--text);
+      border-radius: 999px; padding: 10px 14px; text-decoration: none; transition: .15s ease;
+    }
+    .link-btn:hover, .btn:hover { border-color: #505867; transform: translateY(-1px); }
+    .btn.primary { background: var(--accent); color: #10120b; border-color: var(--accent); font-weight: 800; }
+    .btn.danger { color: #ff9c9c; }
+
+    .stats {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px;
+    }
+    .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+    .stat-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .stat-value { font-size: 30px; font-weight: 800; margin-top: 6px; }
+
+    .layout { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 18px; align-items: start; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+    .form-panel { position: sticky; top: 18px; overflow: hidden; }
+    .panel-head { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 18px; }
+    .panel-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    form { padding: 18px 20px 20px; }
+    .field { margin-bottom: 14px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label { display: block; font-size: 12px; font-weight: 750; margin-bottom: 7px; color: #d8dbe1; }
+    input, select, textarea {
+      width: 100%; background: #0f1115; color: var(--text); border: 1px solid var(--line);
+      border-radius: 10px; padding: 10px 11px; outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #687180; }
+    textarea { min-height: 82px; resize: vertical; line-height: 1.45; }
+    .helper { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+    .content { display: grid; gap: 18px; }
+    .signals { padding: 16px; }
+    .signal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .signal-card { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 14px; min-width: 0; }
+    .signal-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .signal-name { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .signal-meta { color: var(--muted); font-size: 12px; }
+    .signal-text { color: #d6dae2; font-size: 13px; line-height: 1.45; margin-top: 8px; }
+
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .filters input, .filters select { width: auto; min-width: 150px; }
+    .entries { padding: 6px 16px 16px; }
+    .entry {
+      display: grid; grid-template-columns: 92px 120px minmax(0, 1fr) 120px 120px; gap: 12px; align-items: center;
+      padding: 14px 4px; border-bottom: 1px solid var(--line); cursor: pointer;
+    }
+    .entry:hover { background: rgba(255,255,255,.02); }
+    .entry:last-child { border-bottom: 0; }
+    .date { color: var(--muted); font-size: 13px; }
+    .type-chip, .stance {
+      display: inline-flex; align-items: center; width: fit-content; border: 1px solid var(--line);
+      border-radius: 999px; padding: 5px 9px; font-size: 11px; font-weight: 800; white-space: nowrap;
+    }
+    .entry-title { font-weight: 750; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .entry-sub { color: var(--muted); font-size: 12px; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .positive { color: var(--positive); }
+    .negative { color: var(--negative); }
+    .neutral { color: var(--neutral); }
+    .warning { color: var(--warning); }
+    .empty { padding: 52px 20px; text-align: center; color: var(--muted); }
+    .empty strong { display: block; color: var(--text); margin-bottom: 6px; }
+
+    dialog {
+      width: min(820px, calc(100vw - 32px)); border: 1px solid var(--line); border-radius: 18px;
+      background: var(--panel); color: var(--text); padding: 0; box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
+    dialog::backdrop { background: rgba(0,0,0,.72); }
+    .modal-head { display: flex; justify-content: space-between; gap: 12px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
+    .modal-head h3 { margin: 0 0 6px; font-size: 22px; line-height: 1.2; }
+    .modal-meta { color: var(--muted); font-size: 12px; }
+    .icon-btn { border: 0; background: transparent; color: var(--muted); font-size: 24px; padding: 0 4px; }
+    .modal-body { padding: 20px 22px 22px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .detail { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+    .detail.full { grid-column: 1 / -1; }
+    .detail h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .detail p { margin: 0; line-height: 1.55; white-space: pre-wrap; }
+    .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; }
+    .article-link { color: var(--accent); text-decoration: none; font-weight: 750; }
+
+    @media (max-width: 980px) {
+      .topbar { flex-direction: column; }
+      .wsj-links { justify-content: flex-start; }
+      .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .layout { grid-template-columns: 1fr; }
+      .form-panel { position: static; }
+      .entry { grid-template-columns: 86px 110px minmax(0,1fr); }
+      .entry .stance-wrap { display: none; }
+    }
+    @media (max-width: 640px) {
+      .shell { padding: 16px; }
+      .stats, .signal-grid, .detail-grid, .field-row { grid-template-columns: 1fr; }
+      .entry { grid-template-columns: 80px minmax(0, 1fr); }
+      .entry .type-wrap { display: none; }
+      .filters input, .filters select { width: 100%; }
+      .detail.full { grid-column: auto; }
+    }
+  
+
+    .github-panel { margin-bottom: 18px; overflow: hidden; }
+    .github-grid { padding: 16px 20px 18px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; align-items: end; }
+    .github-grid .field { margin: 0; }
+    .github-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .connection-line { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #5b616d; display: inline-block; }
+    .dot.connected { background: var(--positive); }
+    .status-message { min-height: 20px; padding: 0 20px 14px; color: var(--muted); font-size: 12px; }
+    .status-message.error { color: var(--negative); }
+    .status-message.ok { color: var(--positive); }
+    .btn:disabled { opacity: .55; cursor: default; transform: none; }
+    .token-note { color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .sync-badge { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px; font-size: 11px; color: var(--muted); }
+    .sync-badge strong { color: var(--text); font-weight: 750; }
+    @media (max-width: 980px) { .github-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 640px) { .github-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Private GitHub Sync</div>
+        <h1>WSJ Investment Journal</h1>
+        <div class="sub">사실 → 의미 → 장기/스윙 판단을 기록하고, private GitHub repo의 JSON 파일로 여러 PC에서 동기화합니다.</div>
+        <div class="connection-line"><span class="dot" id="connectionDot"></span><span id="connectionText">GitHub 연결 안 됨</span></div>
+      </div>
+      <nav class="wsj-links" aria-label="WSJ sections">
+        <a class="link-btn" href="https://www.wsj.com/economy" target="_blank" rel="noopener">Macro ↗</a>
+        <a class="link-btn" href="https://www.wsj.com/business" target="_blank" rel="noopener">Business ↗</a>
+        <a class="link-btn" href="https://www.wsj.com/opinion" target="_blank" rel="noopener">Opinion ↗</a>
+      </nav>
+    </header>
+
+    <section class="panel github-panel">
+      <div class="panel-head">
+        <h2>GitHub Data Connection</h2>
+        <p>대시보드 repo와 분리된 private data repo를 사용합니다. Token은 현재 브라우저 세션에만 저장됩니다.</p>
+      </div>
+      <div class="github-grid">
+        <div class="field">
+          <label for="owner">GitHub username</label>
+          <input id="owner" autocomplete="username" value="sngmyown" />
+        </div>
+        <div class="field">
+          <label for="repo">Private data repo</label>
+          <input id="repo" placeholder="wsj-journal-data" />
+        </div>
+        <div class="field">
+          <label for="branch">Branch</label>
+          <input id="branch" value="main" />
+        </div>
+        <div class="field">
+          <label for="dataPath">Data file</label>
+          <input id="dataPath" value="journal.json" />
+        </div>
+        <div class="field" style="grid-column:1/-2">
+          <label for="token">Fine-grained Personal Access Token</label>
+          <input id="token" type="password" autocomplete="off" placeholder="github_pat_..." />
+          <div class="token-note">권한은 private data repo 하나에 대해 <strong>Contents: Read and write</strong>만 부여하세요. 토큰은 HTML/저장소에 기록되지 않습니다.</div>
+        </div>
+        <div class="github-actions">
+          <button class="btn primary" id="connectBtn" type="button">Connect</button>
+          <button class="btn" id="refreshBtn" type="button" disabled>Refresh</button>
+          <button class="btn" id="disconnectBtn" type="button" disabled>Disconnect</button>
+        </div>
+      </div>
+      <div class="status-message" id="statusMessage">Private repo를 만든 뒤 연결 정보를 입력하세요. journal.json이 없으면 처음 연결할 때 자동 생성합니다.</div>
+    </section>
+
+    <section class="stats" aria-label="Today stats">
+      <div class="stat"><div class="stat-label">Today</div><div class="stat-value" id="todayCount">0</div></div>
+      <div class="stat"><div class="stat-label">Macro</div><div class="stat-value" id="macroCount">0</div></div>
+      <div class="stat"><div class="stat-label">Sector / Company</div><div class="stat-value" id="companyCount">0</div></div>
+      <div class="stat"><div class="stat-label">Opinion</div><div class="stat-value" id="opinionCount">0</div></div>
+    </section>
+
+    <section class="layout">
+      <aside class="panel form-panel">
+        <div class="panel-head">
+          <h2>새 저널 기록</h2>
+          <p>한 기사당 핵심 판단만 짧게 남깁니다.</p>
+        </div>
+        <form id="journalForm">
+          <div class="field-row">
+            <div class="field">
+              <label for="date">Date</label>
+              <input id="date" name="date" type="date" required />
+            </div>
+            <div class="field">
+              <label for="type">Type</label>
+              <select id="type" name="type" required>
+                <option value="Macro">Macro</option>
+                <option value="Sector / Company">Sector / Company</option>
+                <option value="Opinion">Opinion</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label for="title">Article title</label><input id="title" name="title" autocomplete="off" required /></div>
+          <div class="field"><label for="url">WSJ URL</label><input id="url" name="url" type="url" placeholder="https://www.wsj.com/..." /></div>
+          <div class="field"><label for="what">What happened?</label><textarea id="what" name="what" required placeholder="객관적 사실과 핵심 변화"></textarea></div>
+          <div class="field"><label for="why">Why does it matter?</label><textarea id="why" name="why" required placeholder="시장·산업·기업으로 이어지는 causal chain"></textarea></div>
+          <div class="field-row">
+            <div class="field">
+              <label for="longTerm">Long-term implication</label>
+              <select id="longTerm" name="longTerm" required>
+                <option value="Strengthened">Strengthened</option><option value="Unchanged" selected>Unchanged</option><option value="Weakened">Weakened</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="swing">Swing implication</label>
+              <select id="swing" name="swing" required>
+                <option value="Bullish">Bullish</option><option value="Neutral" selected>Neutral</option><option value="Bearish">Bearish</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label for="longReason">Long-term reason</label><textarea id="longReason" name="longReason" placeholder="왜 thesis가 강화/약화/유지되는가"></textarea></div>
+          <div class="field"><label for="swingReason">Swing reason</label><textarea id="swingReason" name="swingReason" placeholder="단기 가격/수급/내러티브 영향"></textarea></div>
+          <div class="field-row">
+            <div class="field"><label for="axis">Related axis</label><input id="axis" name="axis" placeholder="Rates, Liquidity..." /></div>
+            <div class="field"><label for="ticker">Ticker / Sector</label><input id="ticker" name="ticker" placeholder="NVDA, QQQ, Energy..." /></div>
+          </div>
+          <div class="form-actions"><button type="reset" class="btn">Reset</button><button type="submit" class="btn primary" id="saveBtn" disabled>Save entry</button></div>
+        </form>
+      </aside>
+
+      <div class="content">
+        <section class="panel">
+          <div class="panel-head"><h2>Investment Signals</h2><p>최근 저널에서 나온 장기 thesis와 swing 방향만 빠르게 확인합니다.</p></div>
+          <div class="signals"><div class="signal-grid" id="signalGrid"></div></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2>Recent Journal</h2><p>기록을 클릭하면 전체 판단 근거를 확인할 수 있습니다.</p></div>
+          <div class="filters">
+            <input id="search" type="search" placeholder="Search title, ticker, axis" />
+            <select id="typeFilter"><option value="All">All types</option><option value="Macro">Macro</option><option value="Sector / Company">Sector / Company</option><option value="Opinion">Opinion</option></select>
+            <button class="btn" id="importLocalBtn" type="button" hidden>Import local v1 data</button>
+          </div>
+          <div class="entries" id="entries"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="detailDialog">
+    <div class="modal-head"><div><h3 id="detailTitle"></h3><div class="modal-meta" id="detailMeta"></div></div><button class="icon-btn" id="closeDialog" aria-label="Close">×</button></div>
+    <div class="modal-body" id="detailBody"></div>
+  </dialog>
+
+  <script>
+    const SETTINGS_KEY = 'wsj-github-sync-settings-v1';
+    const TOKEN_KEY = 'wsj-github-sync-token-v1';
+    const OLD_STORAGE_KEY = 'wsj-investment-journal-v1';
+    const API_VERSION = '2026-03-10';
+
+    const form = document.getElementById('journalForm');
+    const entriesEl = document.getElementById('entries');
+    const signalGrid = document.getElementById('signalGrid');
+    const searchInput = document.getElementById('search');
+    const typeFilter = document.getElementById('typeFilter');
+    const dialog = document.getElementById('detailDialog');
+    const saveBtn = document.getElementById('saveBtn');
+    const connectBtn = document.getElementById('connectBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const importLocalBtn = document.getElementById('importLocalBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    let journal = [];
+    let connected = false;
+    let busy = false;
+
+    const todayISO = () => {
+      const d = new Date();
+      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 10);
+    };
+
+    function escapeHTML(value = '') {
+      return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+    }
+
+    function stanceClass(value) {
+      if (['Bullish', 'Strengthened'].includes(value)) return 'positive';
+      if (['Bearish', 'Weakened'].includes(value)) return 'negative';
+      return 'neutral';
+    }
+
+    function formatDate(value) {
+      if (!value) return '';
+      const d = new Date(value + 'T00:00:00');
+      return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: '2-digit' }).format(d);
+    }
+
+    function getSettings() {
+      return {
+        owner: document.getElementById('owner').value.trim(),
+        repo: document.getElementById('repo').value.trim(),
+        branch: document.getElementById('branch').value.trim() || 'main',
+        path: document.getElementById('dataPath').value.trim() || 'journal.json',
+        token: document.getElementById('token').value.trim() || sessionStorage.getItem(TOKEN_KEY) || ''
+      };
+    }
+
+    function loadSavedSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+        document.getElementById('owner').value = saved.owner || 'sngmyown';
+        document.getElementById('repo').value = saved.repo || 'wsj-journal-data';
+        document.getElementById('branch').value = saved.branch || 'main';
+        document.getElementById('dataPath').value = saved.path || 'journal.json';
+        document.getElementById('token').value = sessionStorage.getItem(TOKEN_KEY) || '';
+      } catch {}
+    }
+
+    function saveConnectionSettings(settings) {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ owner: settings.owner, repo: settings.repo, branch: settings.branch, path: settings.path }));
+      sessionStorage.setItem(TOKEN_KEY, settings.token);
+    }
+
+    function utf8ToBase64(value) {
+      const bytes = new TextEncoder().encode(value);
+      let binary = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      return btoa(binary);
+    }
+
+    function base64ToUtf8(value) {
+      const binary = atob(value.replace(/\n/g, ''));
+      const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    }
+
+    function apiUrl(settings) {
+      const path = settings.path.split('/').map(encodeURIComponent).join('/');
+      return `https://api.github.com/repos/${encodeURIComponent(settings.owner)}/${encodeURIComponent(settings.repo)}/contents/${path}?ref=${encodeURIComponent(settings.branch)}`;
+    }
+
+    function apiHeaders(settings) {
+      return {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `Bearer ${settings.token}`,
+        'X-GitHub-Api-Version': API_VERSION
+      };
+    }
+
+    function setStatus(message, kind = '') {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message ${kind}`.trim();
+    }
+
+    function setBusy(value) {
+      busy = value;
+      connectBtn.disabled = value;
+      refreshBtn.disabled = value || !connected;
+      disconnectBtn.disabled = value || !connected;
+      saveBtn.disabled = value || !connected;
+      importLocalBtn.disabled = value || !connected;
+    }
+
+    function setConnected(value, settings = null) {
+      connected = value;
+      const dot = document.getElementById('connectionDot');
+      const text = document.getElementById('connectionText');
+      dot.classList.toggle('connected', value);
+      text.textContent = value && settings ? `Connected · ${settings.owner}/${settings.repo}/${settings.path}` : 'GitHub 연결 안 됨';
+      refreshBtn.disabled = !value;
+      disconnectBtn.disabled = !value;
+      saveBtn.disabled = !value;
+      updateImportButton();
+    }
+
+    async function githubRequest(settings, options = {}) {
+      const response = await fetch(apiUrl(settings), { ...options, headers: { ...apiHeaders(settings), ...(options.headers || {}) } });
+      let payload = null;
+      const text = await response.text();
+      if (text) {
+        try { payload = JSON.parse(text); } catch { payload = text; }
+      }
+      if (!response.ok) {
+        const message = payload && payload.message ? payload.message : `GitHub API error ${response.status}`;
+        const error = new Error(message);
+        error.status = response.status;
+        throw error;
+      }
+      return payload;
+    }
+
+    async function readRemote(settings) {
+      try {
+        const file = await githubRequest(settings);
+        const parsed = JSON.parse(base64ToUtf8(file.content || 'W10='));
+        if (!Array.isArray(parsed)) throw new Error('journal.json must contain a JSON array.');
+        return { entries: parsed, sha: file.sha };
+      } catch (error) {
+        if (error.status !== 404) throw error;
+        const body = {
+          message: 'Initialize WSJ journal data',
+          content: utf8ToBase64('[]\n'),
+          branch: settings.branch
+        };
+        const created = await githubRequest(settings, { method: 'PUT', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
+        return { entries: [], sha: created.content.sha };
+      }
+    }
+
+    async function writeRemote(settings, entries, sha, message) {
+      const body = {
+        message,
+        content: utf8ToBase64(JSON.stringify(entries, null, 2) + '\n'),
+        sha,
+        branch: settings.branch
+      };
+      return githubRequest(settings, { method: 'PUT', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
+    }
+
+    async function mutateRemote(mutator, commitMessage) {
+      const settings = getSettings();
+      setBusy(true);
+      try {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const current = await readRemote(settings);
+          const next = mutator([...current.entries]);
+          try {
+            await writeRemote(settings, next, current.sha, commitMessage);
+            journal = next;
+            renderAll();
+            setStatus(`Synced · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 'ok');
+            return;
+          } catch (error) {
+            if (error.status === 409 && attempt === 0) continue;
+            throw error;
+          }
+        }
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function connect() {
+      const settings = getSettings();
+      if (!settings.owner || !settings.repo || !settings.token) {
+        setStatus('GitHub username, private data repo, token을 입력하세요.', 'error');
+        return;
+      }
+      setBusy(true);
+      setStatus('GitHub에서 journal.json을 불러오는 중...');
+      try {
+        const remote = await readRemote(settings);
+        journal = remote.entries;
+        saveConnectionSettings(settings);
+        setConnected(true, settings);
+        renderAll();
+        setStatus(`${journal.length}개 기록을 불러왔습니다. 다른 PC에서도 같은 repo와 token으로 연결하면 동일한 데이터가 표시됩니다.`, 'ok');
+      } catch (error) {
+        setConnected(false);
+        journal = [];
+        renderAll();
+        setStatus(`연결 실패: ${error.message}`, 'error');
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function refreshRemote() {
+      if (!connected) return;
+      const settings = getSettings();
+      setBusy(true);
+      setStatus('Remote journal을 새로고침하는 중...');
+      try {
+        const remote = await readRemote(settings);
+        journal = remote.entries;
+        renderAll();
+        setStatus(`Refreshed · ${journal.length} entries`, 'ok');
+      } catch (error) {
+        setStatus(`새로고침 실패: ${error.message}`, 'error');
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function disconnect() {
+      sessionStorage.removeItem(TOKEN_KEY);
+      document.getElementById('token').value = '';
+      journal = [];
+      setConnected(false);
+      renderAll();
+      setStatus('연결을 해제했습니다. repo 설정은 이 브라우저에 남고 token은 삭제했습니다.');
+    }
+
+    function renderStats() {
+      const todays = journal.filter(e => e.date === todayISO());
+      document.getElementById('todayCount').textContent = todays.length;
+      document.getElementById('macroCount').textContent = todays.filter(e => e.type === 'Macro').length;
+      document.getElementById('companyCount').textContent = todays.filter(e => e.type === 'Sector / Company').length;
+      document.getElementById('opinionCount').textContent = todays.filter(e => e.type === 'Opinion').length;
+    }
+
+    function sortKey(e) { return `${e.date || ''}${e.createdAt || ''}`; }
+
+    function renderSignals() {
+      const recent = [...journal].sort((a, b) => sortKey(b).localeCompare(sortKey(a))).slice(0, 6);
+      if (!recent.length) {
+        signalGrid.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>${connected ? '아직 신호가 없습니다.' : 'GitHub에 먼저 연결하세요.'}</strong>${connected ? '첫 기록을 저장하면 최근 판단이 여기에 표시됩니다.' : '연결되면 private repo의 저널을 불러옵니다.'}</div>`;
+        return;
+      }
+      signalGrid.innerHTML = recent.map(e => {
+        const name = e.ticker || e.axis || e.type;
+        const reason = e.swingReason || e.longReason || e.why || '';
+        return `<article class="signal-card" data-id="${escapeHTML(e.id)}"><div class="signal-top"><div class="signal-name">${escapeHTML(name)}</div><span class="stance ${stanceClass(e.swing)}">${escapeHTML(e.swing)}</span></div><div class="signal-meta">Long-term: <span class="${stanceClass(e.longTerm)}">${escapeHTML(e.longTerm)}</span> · ${escapeHTML(formatDate(e.date))}</div><div class="signal-text">${escapeHTML(reason).slice(0,170)}${reason.length > 170 ? '…' : ''}</div></article>`;
+      }).join('');
+      signalGrid.querySelectorAll('[data-id]').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.id)));
+    }
+
+    function renderEntries() {
+      const q = searchInput.value.trim().toLowerCase();
+      const type = typeFilter.value;
+      const filtered = [...journal].filter(e => type === 'All' || e.type === type).filter(e => !q || [e.title, e.ticker, e.axis, e.what, e.why].join(' ').toLowerCase().includes(q)).sort((a,b) => sortKey(b).localeCompare(sortKey(a)));
+      if (!filtered.length) {
+        entriesEl.innerHTML = `<div class="empty"><strong>${connected ? '표시할 저널이 없습니다.' : 'GitHub 연결이 필요합니다.'}</strong>${connected ? '새 기록을 만들거나 검색 조건을 변경하세요.' : '상단에서 private data repo에 연결하세요.'}</div>`;
+        return;
+      }
+      entriesEl.innerHTML = filtered.map(e => `<article class="entry" data-id="${escapeHTML(e.id)}"><div class="date">${escapeHTML(formatDate(e.date))}</div><div class="type-wrap"><span class="type-chip">${escapeHTML(e.type)}</span></div><div><div class="entry-title">${escapeHTML(e.title)}</div><div class="entry-sub">${escapeHTML([e.ticker,e.axis].filter(Boolean).join(' · ') || e.what)}</div></div><div class="stance-wrap"><span class="stance ${stanceClass(e.longTerm)}">LT · ${escapeHTML(e.longTerm)}</span></div><div class="stance-wrap"><span class="stance ${stanceClass(e.swing)}">SW · ${escapeHTML(e.swing)}</span></div></article>`).join('');
+      entriesEl.querySelectorAll('[data-id]').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.id)));
+    }
+
+    function updateImportButton() {
+      let old = [];
+      try { old = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY) || '[]'); } catch {}
+      importLocalBtn.hidden = !(connected && Array.isArray(old) && old.length);
+    }
+
+    function renderAll() { renderStats(); renderSignals(); renderEntries(); updateImportButton(); }
+
+    function openDetail(id) {
+      const e = journal.find(item => item.id === id);
+      if (!e) return;
+      document.getElementById('detailTitle').textContent = e.title;
+      document.getElementById('detailMeta').textContent = `${formatDate(e.date)} · ${e.type}${e.ticker ? ' · ' + e.ticker : ''}${e.axis ? ' · ' + e.axis : ''}`;
+      const url = e.url && /^https:\/\//i.test(e.url) ? e.url : '';
+      document.getElementById('detailBody').innerHTML = `<div class="detail-grid"><section class="detail full"><h4>What happened?</h4><p>${escapeHTML(e.what)}</p></section><section class="detail full"><h4>Why does it matter?</h4><p>${escapeHTML(e.why)}</p></section><section class="detail"><h4>Long-term · <span class="${stanceClass(e.longTerm)}">${escapeHTML(e.longTerm)}</span></h4><p>${escapeHTML(e.longReason || '—')}</p></section><section class="detail"><h4>Swing · <span class="${stanceClass(e.swing)}">${escapeHTML(e.swing)}</span></h4><p>${escapeHTML(e.swingReason || '—')}</p></section></div>${url ? `<a class="article-link" href="${escapeHTML(url)}" target="_blank" rel="noopener">Open WSJ article ↗</a>` : ''}<div class="modal-actions"><button class="btn danger" id="deleteEntry">Delete entry</button><button class="btn" id="doneEntry">Done</button></div>`;
+      document.getElementById('deleteEntry').onclick = async () => {
+        if (!confirm('이 저널 기록을 private GitHub repo에서도 삭제하시겠습니까?')) return;
+        try {
+          await mutateRemote(entries => entries.filter(item => item.id !== id), `Delete WSJ journal entry: ${e.title.slice(0,60)}`);
+          dialog.close();
+        } catch (error) { setStatus(`삭제 실패: ${error.message}`, 'error'); }
+      };
+      document.getElementById('doneEntry').onclick = () => dialog.close();
+      dialog.showModal();
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!connected || busy) return;
+      const data = Object.fromEntries(new FormData(form).entries());
+      const entry = { id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), createdAt: new Date().toISOString(), ...data };
+      try {
+        await mutateRemote(entries => [...entries, entry], `Add WSJ journal entry: ${entry.title.slice(0,60)}`);
+        form.reset();
+        document.getElementById('date').value = todayISO();
+        document.getElementById('longTerm').value = 'Unchanged';
+        document.getElementById('swing').value = 'Neutral';
+      } catch (error) { setStatus(`저장 실패: ${error.message}`, 'error'); }
+    });
+
+    form.addEventListener('reset', () => setTimeout(() => {
+      document.getElementById('date').value = todayISO();
+      document.getElementById('longTerm').value = 'Unchanged';
+      document.getElementById('swing').value = 'Neutral';
+    }, 0));
+
+    importLocalBtn.addEventListener('click', async () => {
+      let old = [];
+      try { old = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY) || '[]'); } catch {}
+      if (!Array.isArray(old) || !old.length) return;
+      if (!confirm(`이 브라우저의 기존 v1 기록 ${old.length}개를 private GitHub repo로 복사할까요? 로컬 원본은 삭제하지 않습니다.`)) return;
+      try {
+        await mutateRemote(entries => {
+          const ids = new Set(entries.map(e => e.id));
+          return [...entries, ...old.filter(e => !ids.has(e.id))];
+        }, `Import ${old.length} local WSJ journal entries`);
+      } catch (error) { setStatus(`Import 실패: ${error.message}`, 'error'); }
+    });
+
+    searchInput.addEventListener('input', renderEntries);
+    typeFilter.addEventListener('change', renderEntries);
+    connectBtn.addEventListener('click', connect);
+    refreshBtn.addEventListener('click', refreshRemote);
+    disconnectBtn.addEventListener('click', disconnect);
+    document.getElementById('closeDialog').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+
+    loadSavedSettings();
+    document.getElementById('date').value = todayISO();
+    renderAll();
+    if (sessionStorage.getItem(TOKEN_KEY) && document.getElementById('owner').value && document.getElementById('repo').value) connect();
+  </script>
+</body>
+</html>
