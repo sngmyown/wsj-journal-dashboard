@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WSJ Investment Journal</title>
+  <title>Investment Research Journal</title>
   <style>
     :root {
       color-scheme: dark;
@@ -41,10 +41,37 @@
     .eyebrow { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
     h1 { margin: 6px 0 6px; font-size: clamp(28px, 4vw, 44px); line-height: 1.02; letter-spacing: -.04em; }
     .sub { color: var(--muted); max-width: 760px; line-height: 1.55; }
-    .wsj-links { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .source-groups {
+      width: min(680px, 100%);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .source-group {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(20,22,27,.75);
+      padding: 10px;
+    }
+    .source-group-title {
+      font-size: 11px;
+      font-weight: 850;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin: 0 0 8px;
+    }
+    .source-group-links { display: flex; gap: 6px; flex-wrap: wrap; }
     .link-btn, .btn {
       border: 1px solid var(--line); background: var(--panel); color: var(--text);
       border-radius: 999px; padding: 10px 14px; text-decoration: none; transition: .15s ease;
+    }
+    .source-group .link-btn { font-size: 11px; padding: 7px 9px; }
+    .source-group .link-btn.primary-source {
+      border-color: rgba(216,255,95,.42);
+      color: var(--accent);
+      background: rgba(216,255,95,.055);
     }
     .link-btn:hover, .btn:hover { border-color: #505867; transform: translateY(-1px); }
     .btn.primary { background: var(--accent); color: #10120b; border-color: var(--accent); font-weight: 800; }
@@ -126,24 +153,6 @@
     .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; }
     .article-link { color: var(--accent); text-decoration: none; font-weight: 750; }
 
-    @media (max-width: 980px) {
-      .topbar { flex-direction: column; }
-      .wsj-links { justify-content: flex-start; }
-      .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .layout { grid-template-columns: 1fr; }
-      .form-panel { position: static; }
-      .entry { grid-template-columns: 86px 110px minmax(0,1fr); }
-      .entry .stance-wrap { display: none; }
-    }
-    @media (max-width: 640px) {
-      .shell { padding: 16px; }
-      .stats, .signal-grid, .detail-grid, .field-row { grid-template-columns: 1fr; }
-      .entry { grid-template-columns: 80px minmax(0, 1fr); }
-      .entry .type-wrap { display: none; }
-      .filters input, .filters select { width: 100%; }
-      .detail.full { grid-column: auto; }
-    }
-  
     .transfer-panel { margin-bottom: 18px; overflow: hidden; }
     .transfer-grid { padding: 16px 20px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .transfer-block { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 16px; }
@@ -154,22 +163,68 @@
     .transfer-status { min-height: 20px; padding: 0 20px 16px; color: var(--muted); font-size: 12px; }
     .transfer-status.ok { color: var(--positive); }
     .transfer-status.error { color: var(--negative); }
-    @media (max-width: 760px) { .transfer-grid { grid-template-columns: 1fr; } }
 
-</style>
+    @media (max-width: 1180px) {
+      .topbar { flex-direction: column; }
+      .source-groups { width: 100%; }
+    }
+    @media (max-width: 980px) {
+      .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .layout { grid-template-columns: 1fr; }
+      .form-panel { position: static; }
+      .entry { grid-template-columns: 86px 110px minmax(0,1fr); }
+      .entry .stance-wrap { display: none; }
+    }
+    @media (max-width: 760px) {
+      .transfer-grid { grid-template-columns: 1fr; }
+      .source-groups { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .shell { padding: 16px; }
+      .stats, .signal-grid, .detail-grid, .field-row { grid-template-columns: 1fr; }
+      .entry { grid-template-columns: 80px minmax(0, 1fr); }
+      .entry .type-wrap { display: none; }
+      .filters input, .filters select { width: 100%; }
+      .detail.full { grid-column: auto; }
+    }
+  </style>
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">Investment Research Log</div>
-        <h1>WSJ Investment Journal</h1>
-        <div class="sub">읽은 기사를 요약하는 대신, 사실 → 의미 → 장기/스윙 판단 변화만 기록합니다.</div>
+        <div class="eyebrow">Daily Investment Research Log</div>
+        <h1>Investment Research Journal</h1>
+        <div class="sub">매일 거시경제 · 섹터/기업 · 전문가 의견을 읽고, 사실 → 의미 → 장기/스윙 판단 변화만 기록합니다.</div>
       </div>
-      <nav class="wsj-links" aria-label="WSJ sections">
-        <a class="link-btn" href="https://www.wsj.com/economy?utm_source=chatgpt.com" target="_blank" rel="noopener">Macro ↗</a>
-        <a class="link-btn" href="https://www.wsj.com/business" target="_blank" rel="noopener">Sector / Company ↗</a>
-        <a class="link-btn" href="https://www.wsj.com/opinion?utm_source=chatgpt.com" target="_blank" rel="noopener">Opinion ↗</a>
+
+      <nav class="source-groups" aria-label="Daily research sources">
+        <div class="source-group">
+          <div class="source-group-title">① 거시경제</div>
+          <div class="source-group-links">
+            <a class="link-btn primary-source" href="https://www.reuters.com/markets/" target="_blank" rel="noopener" title="1순위 · 금리, CPI, 고용, Fed, 달러, 유가, 지정학">Reuters Markets ↗</a>
+            <a class="link-btn" href="https://www.investing.com/economic-calendar" target="_blank" rel="noopener" title="2순위 · 경제지표 일정과 발표">Investing.com ↗</a>
+            <a class="link-btn" href="https://www.federalreserve.gov/monetarypolicy.htm" target="_blank" rel="noopener" title="2순위 · Fed 정책과 FOMC">Fed ↗</a>
+            <a class="link-btn" href="https://fred.stlouisfed.org/" target="_blank" rel="noopener" title="2순위 · 거시경제 데이터 시계열">FRED ↗</a>
+          </div>
+        </div>
+
+        <div class="source-group">
+          <div class="source-group-title">② 섹터 · 기업</div>
+          <div class="source-group-links">
+            <a class="link-btn primary-source" href="https://www.reuters.com/business/" target="_blank" rel="noopener" title="1순위 · 실적, 가이던스, 산업 변화, M&A, 기업 뉴스">Reuters Business ↗</a>
+            <a class="link-btn" href="https://finance.yahoo.com/" target="_blank" rel="noopener" title="2순위 · 기업별 뉴스, 실적, 시세">Yahoo Finance ↗</a>
+          </div>
+        </div>
+
+        <div class="source-group">
+          <div class="source-group-title">③ 전문가 의견</div>
+          <div class="source-group-links">
+            <a class="link-btn primary-source" href="https://www.reuters.com/commentary/reuters-open-interest/" target="_blank" rel="noopener" title="1순위 · 시장 해석과 데이터 기반 전문가 코멘터리">Reuters Open Interest ↗</a>
+            <a class="link-btn" href="https://cepr.org/voxeu" target="_blank" rel="noopener" title="2순위 · 경제학자와 연구자 관점">VoxEU ↗</a>
+            <a class="link-btn" href="https://www.piie.com/research" target="_blank" rel="noopener" title="2순위 · 국제경제와 장기 구조 변화 연구">PIIE ↗</a>
+          </div>
+        </div>
       </nav>
     </header>
 
@@ -204,7 +259,7 @@
       <div class="stat"><div class="stat-label">Today</div><div class="stat-value" id="todayCount">0</div></div>
       <div class="stat"><div class="stat-label">Macro</div><div class="stat-value" id="macroCount">0</div></div>
       <div class="stat"><div class="stat-label">Sector / Company</div><div class="stat-value" id="companyCount">0</div></div>
-      <div class="stat"><div class="stat-label">Opinion</div><div class="stat-value" id="opinionCount">0</div></div>
+      <div class="stat"><div class="stat-label">Expert Opinion</div><div class="stat-value" id="opinionCount">0</div></div>
     </section>
 
     <section class="layout">
@@ -224,7 +279,7 @@
               <select id="type" name="type" required>
                 <option value="Macro">Macro</option>
                 <option value="Sector / Company">Sector / Company</option>
-                <option value="Opinion">Opinion</option>
+                <option value="Opinion">Expert Opinion</option>
               </select>
             </div>
           </div>
@@ -234,8 +289,8 @@
             <input id="title" name="title" autocomplete="off" required />
           </div>
           <div class="field">
-            <label for="url">WSJ URL</label>
-            <input id="url" name="url" type="url" placeholder="https://www.wsj.com/..." />
+            <label for="url">Article URL</label>
+            <input id="url" name="url" type="url" placeholder="https://www.reuters.com/..." />
           </div>
           <div class="field">
             <label for="what">What happened?</label>
@@ -314,7 +369,7 @@
               <option value="All">All types</option>
               <option value="Macro">Macro</option>
               <option value="Sector / Company">Sector / Company</option>
-              <option value="Opinion">Opinion</option>
+              <option value="Opinion">Expert Opinion</option>
             </select>
           </div>
           <div class="entries" id="entries"></div>
@@ -335,6 +390,7 @@
   </dialog>
 
   <script>
+    // STORAGE_KEY intentionally unchanged so all existing journal data remains compatible.
     const STORAGE_KEY = 'wsj-investment-journal-v1';
     const form = document.getElementById('journalForm');
     const entriesEl = document.getElementById('entries');
@@ -482,7 +538,7 @@
       entriesEl.innerHTML = filtered.map(e => `
         <article class="entry" data-id="${escapeHTML(e.id)}">
           <div class="date">${escapeHTML(formatDate(e.date))}</div>
-          <div class="type-wrap"><span class="type-chip">${escapeHTML(e.type)}</span></div>
+          <div class="type-wrap"><span class="type-chip">${escapeHTML(e.type === 'Opinion' ? 'Expert Opinion' : e.type)}</span></div>
           <div>
             <div class="entry-title">${escapeHTML(e.title)}</div>
             <div class="entry-sub">${escapeHTML([e.ticker, e.axis].filter(Boolean).join(' · ') || e.what)}</div>
@@ -505,7 +561,8 @@
       if (!e) return;
 
       document.getElementById('detailTitle').textContent = e.title;
-      document.getElementById('detailMeta').textContent = `${formatDate(e.date)} · ${e.type}${e.ticker ? ' · ' + e.ticker : ''}${e.axis ? ' · ' + e.axis : ''}`;
+      const typeLabel = e.type === 'Opinion' ? 'Expert Opinion' : e.type;
+      document.getElementById('detailMeta').textContent = `${formatDate(e.date)} · ${typeLabel}${e.ticker ? ' · ' + e.ticker : ''}${e.axis ? ' · ' + e.axis : ''}`;
 
       const url = e.url && /^https:\/\//i.test(e.url) ? e.url : '';
       document.getElementById('detailBody').innerHTML = `
@@ -515,7 +572,7 @@
           <section class="detail"><h4>Long-term · <span class="${stanceClass(e.longTerm)}">${escapeHTML(e.longTerm)}</span></h4><p>${escapeHTML(e.longReason || '—')}</p></section>
           <section class="detail"><h4>Swing · <span class="${stanceClass(e.swing)}">${escapeHTML(e.swing)}</span></h4><p>${escapeHTML(e.swingReason || '—')}</p></section>
         </div>
-        ${url ? `<a class="article-link" href="${escapeHTML(url)}" target="_blank" rel="noopener">Open WSJ article ↗</a>` : ''}
+        ${url ? `<a class="article-link" href="${escapeHTML(url)}" target="_blank" rel="noopener">Open article ↗</a>` : ''}
         <div class="modal-actions">
           <button class="btn danger" id="deleteEntry">Delete entry</button>
           <button class="btn" id="doneEntry">Done</button>
@@ -546,7 +603,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `wsj-journal-backup-${todayISO()}.json`;
+      a.download = `investment-journal-backup-${todayISO()}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
